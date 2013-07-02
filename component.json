@@ -4,10 +4,11 @@
   "description": "Event manager used by 'events' and 'delegates' to provide higher-level event handling",
   "version": "1.0.0",
   "keywords": ["event", "events", "subscriptions"],
-  "dependencies": {},
+  "dependencies": {
+    "component/type": "*"
+  },
   "development": {
     "component/emitter": "*",
-    "component/type": "*",
     "component/assert": "*"
   },
   "license": "MIT",
