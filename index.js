@@ -1,4 +1,5 @@
 
+var type = require('type')
 
 /**
  * Expose `EventManager`.
@@ -19,6 +20,7 @@ module.exports = EventManager;
 function EventManager(target, obj) {
   this.target = target;
   this.obj = obj;
+  this._guid = 0;
   this._bindings = {};
 }
 
@@ -55,6 +57,7 @@ EventManager.prototype.onunbind = function(fn){
  *
  *    events.bind('login') // implies "onlogin"
  *    events.bind('login', 'onLogin')
+ *    events.bind('login', function)
  *
  * @param {String} event
  * @param {String} [method]
@@ -83,15 +86,20 @@ EventManager.prototype.addBinding = function(event, method){
   var method = method || 'on' + event;
   var args = [].slice.call(arguments, 2);
 
+  var isFn = type(method) == 'function';
+  var fn = isFn? method : obj[method];
+  var guid = isFn? this._guid++ : method;
+  if (isFn) method.guid = guid;
+
   // callback
   function callback() {
     var a = [].slice.call(arguments).concat(args);
-    obj[method].apply(obj, a);
+    fn.apply(obj, a);
   }
 
   // subscription
   this._bindings[event] = this._bindings[event] || {};
-  this._bindings[event][method] = callback;
+  this._bindings[event][guid] = callback;
 
   return callback;
 };
@@ -102,6 +110,7 @@ EventManager.prototype.addBinding = function(event, method){
  *
  *     evennts.unbind('login', 'onLogin')
  *     evennts.unbind('login')
+ *     evennts.unbind(function)
  *     evennts.unbind()
  *
  * @param {String} [event]
@@ -113,7 +122,8 @@ EventManager.prototype.addBinding = function(event, method){
 EventManager.prototype.unbind = function(event, method){
   if (0 == arguments.length) return this.unbindAll();
   if (1 == arguments.length) return this.unbindAllOf(event);
-  var fn = this._bindings[event][method];
+  var guid = method.guid == null? method : method.guid;
+  var fn = this._bindings[event][guid];
   if (this._onunbind) this._onunbind(event, method, fn);
   this._unbind(event, fn);
   return fn;
