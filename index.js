@@ -87,12 +87,12 @@ EventManager.prototype.addBinding = function(event, method){
   var args = [].slice.call(arguments, 2);
 
   var isFn = type(method) == 'function';
-  var fn = isFn? method : obj[method];
   var guid = isFn? this._guid++ : method;
   if (isFn) method.guid = guid;
 
   // callback
   function callback() {
+    var fn = isFn? method : obj[method];
     var a = [].slice.call(arguments).concat(args);
     fn.apply(obj, a);
   }
